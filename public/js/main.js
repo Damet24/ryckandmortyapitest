@@ -9,9 +9,9 @@ class Label {
     } else this.target = document.querySelector(label);
   }
 
-  getElement() {
-    return this.target;
-  }
+  clearElement = () => this.target.innerHTML = '';
+
+  getElement = () => this.target;
 
   setAttribute({name, value}){
     this.target.setAttribute(name, value)
@@ -34,7 +34,7 @@ class Label {
   }
 }
 
-function cardCreate(_title, url, des) {
+function cardCreate(_title, url, des, id, callback) {
   let card = new Label("div", true);
   card.addClass("card");
 
@@ -54,9 +54,11 @@ function cardCreate(_title, url, des) {
   text.addClass("card-text");
 
   let button = new Label("a", true);
+  button.setAttribute({name: "id", value: id})
   button.target.innerText = "More info";
   button.addClass("btn");
   button.addClass("btn-primary");
+  button.onClick(callback);
 
   body.addElement(title.getElement());
   body.addElement(text.getElement());
@@ -99,26 +101,65 @@ function init() {
   const character = new Label("#bt-characters");
   const episodes = new Label("#bt-episodes");
 
+  let section1 = new Label("div", true);
+  section1.addClass("row");
+  section1.addClass("py-4");
+  main.addElement(section1.getElement());
+
+  let section2 = new Label("div", true);
+  section2.addClass("row");
+  section2.addClass("py-4");
+  main.addElement(section2.getElement());
+
+  function moreInfo(event){
+    let id = event.target.id;
+
+    section1.clearElement();
+    section2.clearElement();
+
+    fetch(`https://rickandmortyapi.com/api/character/${id}`)
+      .then(res => res.json())
+      .then(data => {
+
+        console.log(data);
+
+        const main = new Label("div", true);
+        main.addClass('col-md-8');
+        const cont1 = new Label("div", true);
+        cont1.addClass('container');
+        const title = new Label("h1", true);
+        title.target.innerText = data.name;
+
+        const r = new Label("div", true);
+        r.addClass('col-md-4');
+        const img = new Label('img', true);
+        img.setAttribute({name: 'src', value: data.image});
+
+        r.addElement(img.getElement());
+        cont1.addElement(title.getElement());
+        main.addElement(cont1.getElement());
+
+        section1.addElement(main.getElement());
+        section1.addElement(r.getElement());
+      });
+  }
+
   function Home() {
-    let section1 = new Label("div", true);
-    section1.addClass("row");
-    section1.addClass("py-4");
-    main.addElement(section1.getElement());
+
+    section1.clearElement();
+    section2.clearElement();
+    
     let s1title = new Label("h1", true);
     s1title.addClass("py-4");
     s1title.target.innerText = "Characters";
     section1.addElement(s1title.getElement());
 
-    let section2 = new Label("div", true);
-    section2.addClass("row");
-    section2.addClass("py-4");
-    main.addElement(section2.getElement());
     let s2title = new Label("h1", true);
     s2title.addClass("py-4");
     s2title.target.innerText = "Episodes";
     section2.addElement(s2title.getElement());
 
-    fetch("https://rickandmortyapi.com/api/character")
+    fetch("https://rickandmortyapi.com/api/character/?page=34")
       .then((response) => response.json())
       .then((data) => {
 
@@ -131,7 +172,7 @@ function init() {
           col.addClass("col-sm-4");
           col.addClass("col-6");
           col.addClass("pb-4");
-          let card = cardCreate(list[i].name, list[i].image, list[i].status);
+          let card = cardCreate(list[i].name, list[i].image, list[i].status, list[i].id, moreInfo);
           col.addElement(card.getElement());
           section1.addElement(col.getElement());
         }
